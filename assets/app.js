@@ -1,0 +1,216 @@
+const weekdayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const draftKey = "duty-roster-form-draft-v1";
+
+const elements = {
+  form: document.querySelector("#availabilityForm"),
+  memberName: document.querySelector("#memberName"),
+  memberContact: document.querySelector("#memberContact"),
+  rosterMonth: document.querySelector("#rosterMonth"),
+  dateCountLabel: document.querySelector("#dateCountLabel"),
+  availabilityGrid: document.querySelector("#availabilityGrid"),
+  selectAllButton: document.querySelector("#selectAllButton"),
+  submitButton: document.querySelector("#submitButton"),
+  submitStatus: document.querySelector("#submitStatus"),
+};
+
+const state = loadDraft();
+
+function todayIso() {
+  return toIsoDate(new Date());
+}
+
+function currentMonth() {
+  return todayIso().slice(0, 7);
+}
+
+function addDays(date, days) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
+function toIsoDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function parseIsoDate(value) {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function getMonthBounds(monthValue) {
+  const [year, month] = monthValue.split("-").map(Number);
+  const start = new Date(year, month - 1, 1);
+  const end = new Date(year, month, 0);
+  return {
+    startDate: toIsoDate(start),
+    endDate: toIsoDate(end),
+  };
+}
+
+function formatDate(value) {
+  const date = parseIsoDate(value);
+  return `${date.getMonth() + 1}/${date.getDate()}`;
+}
+
+function getWeekday(value) {
+  return weekdayLabels[parseIsoDate(value).getDay()];
+}
+
+function loadDraft() {
+  const fallback = {
+    name: "",
+    contact: "",
+    rosterMonth: currentMonth(),
+    availability: [],
+  };
+
+  try {
+    const saved = JSON.parse(localStorage.getItem(draftKey));
+    const migratedMonth = saved?.rosterMonth || saved?.startDate?.slice(0, 7);
+    return { ...fallback, ...saved, rosterMonth: migratedMonth || fallback.rosterMonth };
+  } catch {
+    return fallback;
+  }
+}
+
+function saveDraft() {
+  localStorage.setItem(draftKey, JSON.stringify(state));
+}
+
+function getDateRange() {
+  if (!state.rosterMonth) return [];
+
+  const { startDate, endDate } = getMonthBounds(state.rosterMonth);
+  const start = parseIsoDate(startDate);
+  const end = parseIsoDate(endDate);
+
+  const dates = [];
+  for (let cursor = start; cursor <= end; cursor = addDays(cursor, 1)) {
+    dates.push(toIsoDate(cursor));
+  }
+  return dates;
+}
+
+function render() {
+  elements.memberName.value = state.name;
+  elements.memberContact.value = state.contact;
+  elements.rosterMonth.value = state.rosterMonth;
+
+  const dates = getDateRange();
+  elements.dateCountLabel.textContent = `${dates.length} days`;
+  elements.availabilityGrid.innerHTML = "";
+
+  if (dates.length === 0) {
+    elements.availabilityGrid.innerHTML = `<div class="empty-state">Please check the date range.</div>`;
+    return;
+  }
+
+  dates.forEach((date) => {
+    const available = state.availability.includes(date);
+    const card = document.createElement("label");
+    card.className = `day-card${available ? " available" : ""}`;
+    card.innerHTML = `
+      <span class="day-text">
+        <strong>${formatDate(date)}</strong>
+        <span>${getWeekday(date)}</span>
+      </span>
+      <span class="toggle">
+        <input type="checkbox" data-date="${date}" ${available ? "checked" : ""} />
+        <span aria-hidden="true"></span>
+      </span>
+    `;
+    elements.availabilityGrid.appendChild(card);
+  });
+}
+
+function syncDraftFromInputs() {
+  state.name = elements.memberName.value;
+  state.contact = elements.memberContact.value;
+  state.rosterMonth = elements.rosterMonth.value;
+
+  const validDates = new Set(getDateRange());
+  state.availability = state.availability.filter((date) => validDates.has(date));
+  saveDraft();
+  render();
+}
+
+function setStatus(message, tone = "") {
+  elements.submitStatus.className = `status-strip ${tone}`;
+  elements.submitStatus.textContent = message;
+}
+
+async function submitAvailability() {
+  const apiUrl = window.ROSTER_CONFIG?.apiUrl?.trim();
+  if (!apiUrl) {
+    setStatus("Google Apps Script URL is not configured yet. Paste it into assets/config.js.", "warning");
+    return;
+  }
+  if (state.availability.length === 0) {
+    setStatus("Please select at least one available date.", "warning");
+    return;
+  }
+
+  elements.submitButton.disabled = true;
+  setStatus("Submitting...");
+
+  try {
+    const { startDate, endDate } = getMonthBounds(state.rosterMonth);
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({
+        action: "submit",
+        name: state.name.trim(),
+        contact: state.contact.trim(),
+        rosterMonth: state.rosterMonth,
+        startDate,
+        endDate,
+        availability: state.availability,
+      }),
+    });
+    const result = await response.json();
+    if (!result.ok) throw new Error(result.error || "Submit failed");
+    setStatus("Submitted. Submit again later to replace the previous response for this name.", "good");
+  } catch (error) {
+    setStatus(`Submit failed: ${error.message}`, "warning");
+  } finally {
+    elements.submitButton.disabled = false;
+  }
+}
+
+elements.form.addEventListener("submit", (event) => {
+  event.preventDefault();
+  syncDraftFromInputs();
+  submitAvailability();
+});
+
+elements.form.addEventListener("input", syncDraftFromInputs);
+
+elements.availabilityGrid.addEventListener("change", (event) => {
+  const input = event.target.closest("input[type='checkbox']");
+  if (!input) return;
+
+  if (input.checked && !state.availability.includes(input.dataset.date)) {
+    state.availability.push(input.dataset.date);
+  }
+  if (!input.checked) {
+    state.availability = state.availability.filter((date) => date !== input.dataset.date);
+  }
+
+  state.availability.sort();
+  saveDraft();
+  render();
+});
+
+elements.selectAllButton.addEventListener("click", () => {
+  const dates = getDateRange();
+  state.availability = state.availability.length === dates.length ? [] : dates;
+  saveDraft();
+  render();
+});
+
+render();
