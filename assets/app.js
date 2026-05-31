@@ -210,7 +210,10 @@ elements.form.addEventListener("submit", (event) => {
   submitAvailability();
 });
 
-elements.form.addEventListener("input", syncDraftFromInputs);
+elements.form.addEventListener("input", (event) => {
+  if (event.target.closest(".date-checkbox")) return;
+  syncDraftFromInputs();
+});
 elements.form.addEventListener("change", syncDraftFromInputs);
 
 elements.availabilityGrid.addEventListener("change", (event) => {
