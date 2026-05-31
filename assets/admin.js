@@ -310,11 +310,22 @@ function buildRosterMatrixRows() {
       assignedByName.get(name).add(row.date);
     });
   });
+  const responsesByName = new Map(state.responses.map((response) => [normalizeName(response.name), response]));
+  const orderedResponses = [];
+  (window.PEOPLE_DIRECTORY || []).forEach((person) => {
+    const normalized = normalizeName(person.name);
+    const response = responsesByName.get(normalized);
+    if (response) {
+      orderedResponses.push(response);
+      responsesByName.delete(normalized);
+    }
+  });
+  orderedResponses.push(...responsesByName.values());
 
   const rows = [
     ["職別", "單位", "姓名", ...dates.map((date) => String(parseIsoDate(date).getDate()))],
     ["", "", "星期", ...dates.map(getWeekday)],
-    ...state.responses.map((response) => {
+    ...orderedResponses.map((response) => {
       const person = getPersonInfo(response.name);
       return [
         person?.role || "",
