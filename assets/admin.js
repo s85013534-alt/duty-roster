@@ -394,7 +394,7 @@ function exportExcel() {
 </Workbook>`;
 
   const plainTable = rows.map((row) => row.join("\t")).join("\n");
-  downloadFile(`roster_matrix_${state.settings.rosterMonth}.xml`, xml, "application/vnd.ms-excel;charset=utf-8", plainTable);
+  downloadFile(`roster_matrix_${state.settings.rosterMonth}_v24.xml`, xml, "application/vnd.ms-excel;charset=utf-8", plainTable);
 }
 
 function formatTaiwanMonth(monthValue) {
