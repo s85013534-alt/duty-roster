@@ -333,37 +333,68 @@ function exportExcel() {
   const rows = buildRosterMatrixRows();
   const dates = getDateRange();
   const title = `臺北市搜救隊醫療組勤務輪值表(${formatTaiwanMonth(state.settings.rosterMonth)})`;
+  const bodyRows = rows.slice(2);
   const columnCount = rows[0]?.length || 3;
-  const colgroup = [
-    '<col style="width:7.5em">',
-    '<col style="width:10em">',
-    '<col style="width:8em">',
-    ...dates.map(() => '<col style="width:2.82em">'),
+  const columns = [
+    '<Column ss:Width="54"/>',
+    '<Column ss:Width="72"/>',
+    '<Column ss:Width="58"/>',
+    ...dates.map(() => '<Column ss:Width="20.3"/>'),
   ].join("");
 
-  const tableRows = [
-    `<tr><th colspan="${columnCount}" class="title">${escapeHtml(title)}</th></tr>`,
-    ...rows.map((row) => `<tr>${row.map((cell, index) => `<td class="${index >= 3 ? "date-cell" : ""}">${escapeHtml(cell)}</td>`).join("")}</tr>`),
-  ].join("");
+  const titleRow = `<Row><Cell ss:MergeAcross="${columnCount - 1}" ss:StyleID="Title"><Data ss:Type="String">${xmlEscape(title)}</Data></Cell></Row>`;
+  const headerRow1 = `<Row>
+    <Cell ss:MergeDown="1" ss:StyleID="Cell"><Data ss:Type="String">職別</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="Cell"><Data ss:Type="String">單位</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="Cell"><Data ss:Type="String">日期 姓名</Data></Cell>
+    ${dates.map((date) => `<Cell ss:StyleID="DateCell"><Data ss:Type="String">${parseIsoDate(date).getDate()}</Data></Cell>`).join("")}
+  </Row>`;
+  const headerRow2 = `<Row>
+    ${dates.map((date, index) => `<Cell ss:Index="${index + 4}" ss:StyleID="DateCell"><Data ss:Type="String">${xmlEscape(getWeekday(date))}</Data></Cell>`).join("")}
+  </Row>`;
+  const dataRows = bodyRows
+    .map((row) => `<Row>${row.map((cell, index) => `<Cell ss:StyleID="${index >= 3 ? "DateCell" : "Cell"}"><Data ss:Type="String">${xmlEscape(cell)}</Data></Cell>`).join("")}</Row>`)
+    .join("");
 
-  const html = `<!doctype html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <style>
-    table { border-collapse: collapse; font-family: "DFKai-SB", "BiauKai", serif; }
-    th, td { border: 1px solid #000; text-align: center; vertical-align: middle; mso-number-format:"\\@"; }
-    .title { font-family: "DFKai-SB", "BiauKai", serif; font-size: 16pt; font-weight: 700; border: 0; }
-    .date-cell { width: 2.82em; }
-  </style>
-</head>
-<body>
-  <table>${colgroup}${tableRows}</table>
-</body>
-</html>`;
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+ <Styles>
+  <Style ss:ID="Title">
+   <Font ss:FontName="標楷體" ss:Size="16" ss:Bold="1"/>
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+  </Style>
+  <Style ss:ID="Cell">
+   <Font ss:FontName="標楷體" ss:Size="12"/>
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="DateCell">
+   <Font ss:FontName="標楷體" ss:Size="12"/>
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+  </Style>
+ </Styles>
+ <Worksheet ss:Name="輪值表">
+  <Table>${columns}${titleRow}${headerRow1}${headerRow2}${dataRows}</Table>
+ </Worksheet>
+</Workbook>`;
 
   const plainTable = rows.map((row) => row.join("\t")).join("\n");
-  downloadFile(`roster_matrix_${state.settings.rosterMonth}.xls`, `\ufeff${html}`, "application/vnd.ms-excel;charset=utf-8", plainTable);
+  downloadFile(`roster_matrix_${state.settings.rosterMonth}.xml`, xml, "application/vnd.ms-excel;charset=utf-8", plainTable);
 }
 
 function formatTaiwanMonth(monthValue) {
@@ -411,6 +442,15 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+}
+
+function xmlEscape(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&apos;");
 }
 
 
