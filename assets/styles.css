@@ -86,7 +86,7 @@ h2 {
 .panel-title,
 .member-entry,
 .member-tabs,
-.day-card,
+.date-option,
 .assignment-list {
   display: flex;
   align-items: center;
@@ -211,10 +211,12 @@ button:hover {
 }
 
 .date-checkbox {
-  width: 20px;
-  min-height: 20px;
+  width: 26px;
+  height: 26px;
+  min-height: 26px;
   accent-color: var(--accent);
   flex: 0 0 auto;
+  cursor: pointer;
 }
 
 label {
@@ -306,9 +308,9 @@ select:focus {
   padding: 24px;
 }
 
-.day-card {
-  justify-content: space-between;
-  gap: 10px;
+.date-option {
+  justify-content: flex-start;
+  gap: 12px;
   width: 100%;
   min-height: 78px;
   border: 1px solid var(--line);
@@ -316,24 +318,32 @@ select:focus {
   padding: 12px;
   background: #fff;
   color: var(--ink);
-  text-align: left;
 }
 
-.day-card.available {
+.date-option.available {
   border-color: var(--accent);
   background: var(--accent-soft);
 }
 
-.day-text strong,
-.day-text span {
+.date-label {
+  flex: 1;
+  min-height: 48px;
+  display: grid;
+  align-content: center;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.date-label strong,
+.date-label span {
   display: block;
 }
 
-.day-text strong {
+.date-label strong {
   font-size: 0.98rem;
 }
 
-.day-text span {
+.date-label span {
   margin-top: 3px;
   color: var(--muted);
   font-size: 0.82rem;

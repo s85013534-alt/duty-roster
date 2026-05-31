@@ -137,16 +137,17 @@ function render() {
 
   dates.forEach((date) => {
     const available = state.availability.includes(date);
-    const card = document.createElement("label");
-    card.className = `day-card${available ? " available" : ""}`;
-    card.innerHTML = `
-      <span class="day-text">
+    const item = document.createElement("div");
+    const inputId = `date-${date}`;
+    item.className = `date-option${available ? " available" : ""}`;
+    item.innerHTML = `
+      <input id="${inputId}" class="date-checkbox" type="checkbox" data-date="${date}" ${available ? "checked" : ""} />
+      <label for="${inputId}" class="date-label">
         <strong>${formatDate(date)}</strong>
         <span>${getWeekday(date)}</span>
-      </span>
-      <input class="date-checkbox" type="checkbox" data-date="${date}" ${available ? "checked" : ""} />
+      </label>
     `;
-    elements.availabilityGrid.appendChild(card);
+    elements.availabilityGrid.appendChild(item);
   });
 }
 
