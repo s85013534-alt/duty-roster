@@ -18,6 +18,7 @@ const elements = {
   buildRosterButton: document.querySelector("#buildRosterButton"),
   exportCsvButton: document.querySelector("#exportCsvButton"),
   exportExcelButton: document.querySelector("#exportExcelButton"),
+  exportLinks: document.querySelector("#exportLinks"),
 };
 
 const state = {
@@ -381,10 +382,19 @@ function downloadFile(filename, content, type) {
   link.style.display = "none";
   document.body.appendChild(link);
   link.click();
-  window.setTimeout(() => {
-    link.remove();
-    URL.revokeObjectURL(url);
-  }, 1000);
+
+  const manualLink = document.createElement("a");
+  manualLink.href = url;
+  manualLink.download = filename;
+  manualLink.className = "download-link";
+  manualLink.textContent = `下載 ${filename}`;
+  manualLink.addEventListener("click", () => {
+    window.setTimeout(() => URL.revokeObjectURL(url), 30000);
+  });
+
+  elements.exportLinks.innerHTML = "";
+  elements.exportLinks.appendChild(manualLink);
+  link.remove();
 }
 
 function csvCell(value) {

@@ -249,6 +249,23 @@ select:focus {
   gap: 10px;
 }
 
+.export-links {
+  margin-top: 12px;
+  min-height: 32px;
+}
+
+.download-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  font-weight: 800;
+  border: 1px solid var(--accent);
+}
+
 .member-entry label {
   flex: 1;
 }
