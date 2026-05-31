@@ -284,13 +284,23 @@ function buildRoster() {
 function exportCsv() {
   if (state.roster.length === 0) buildRoster();
 
+  const dates = getDateRange();
+  const assignedByName = new Map(state.responses.map((response) => [response.name, new Set()]));
+  state.roster.forEach((row) => {
+    row.assigned.forEach((name) => {
+      if (!assignedByName.has(name)) assignedByName.set(name, new Set());
+      assignedByName.get(name).add(row.date);
+    });
+  });
+
   const rows = [
-    ["Date", "Weekday", "Assignees", "Status"],
-    ...state.roster.map((row) => [
-      row.date,
-      getWeekday(row.date),
-      row.assigned.join(", "),
-      row.shortage ? `Short ${row.shortage}` : "Filled",
+    ["", "", "Date", ...dates.map((date) => String(parseIsoDate(date).getDate()))],
+    ["Role", "Unit", "Name", ...dates.map(getWeekday)],
+    ...state.responses.map((response) => [
+      "",
+      "",
+      response.name,
+      ...dates.map((date) => (assignedByName.get(response.name)?.has(date) ? "●" : "")),
     ]),
   ];
 
