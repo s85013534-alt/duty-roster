@@ -5,6 +5,7 @@ const elements = {
   form: document.querySelector("#availabilityForm"),
   memberName: document.querySelector("#memberName"),
   memberContact: document.querySelector("#memberContact"),
+  rosterYear: document.querySelector("#rosterYear"),
   rosterMonth: document.querySelector("#rosterMonth"),
   dateCountLabel: document.querySelector("#dateCountLabel"),
   availabilityGrid: document.querySelector("#availabilityGrid"),
@@ -21,6 +22,29 @@ function todayIso() {
 
 function currentMonth() {
   return todayIso().slice(0, 7);
+}
+
+function getSelectedMonth() {
+  return `${elements.rosterYear.value}-${elements.rosterMonth.value}`;
+}
+
+function populateMonthControls() {
+  const currentYear = new Date().getFullYear();
+  elements.rosterYear.innerHTML = "";
+  for (let year = currentYear - 1; year <= currentYear + 2; year += 1) {
+    const option = document.createElement("option");
+    option.value = String(year);
+    option.textContent = String(year);
+    elements.rosterYear.appendChild(option);
+  }
+
+  elements.rosterMonth.innerHTML = "";
+  for (let month = 1; month <= 12; month += 1) {
+    const option = document.createElement("option");
+    option.value = String(month).padStart(2, "0");
+    option.textContent = `${month}月`;
+    elements.rosterMonth.appendChild(option);
+  }
 }
 
 function addDays(date, days) {
@@ -98,7 +122,9 @@ function getDateRange() {
 function render() {
   elements.memberName.value = state.name;
   elements.memberContact.value = state.contact;
-  elements.rosterMonth.value = state.rosterMonth;
+  const [year, month] = state.rosterMonth.split("-");
+  elements.rosterYear.value = year;
+  elements.rosterMonth.value = month;
 
   const dates = getDateRange();
   elements.dateCountLabel.textContent = `${dates.length} days`;
@@ -111,17 +137,17 @@ function render() {
 
   dates.forEach((date) => {
     const available = state.availability.includes(date);
-    const card = document.createElement("label");
+    const card = document.createElement("button");
+    card.type = "button";
     card.className = `day-card${available ? " available" : ""}`;
+    card.dataset.date = date;
+    card.setAttribute("aria-pressed", String(available));
     card.innerHTML = `
       <span class="day-text">
         <strong>${formatDate(date)}</strong>
         <span>${getWeekday(date)}</span>
       </span>
-      <span class="toggle">
-        <input type="checkbox" data-date="${date}" ${available ? "checked" : ""} />
-        <span aria-hidden="true"></span>
-      </span>
+      <span class="check-indicator" aria-hidden="true">${available ? "✓" : ""}</span>
     `;
     elements.availabilityGrid.appendChild(card);
   });
@@ -130,7 +156,7 @@ function render() {
 function syncDraftFromInputs() {
   state.name = elements.memberName.value;
   state.contact = elements.memberContact.value;
-  state.rosterMonth = elements.rosterMonth.value;
+  state.rosterMonth = getSelectedMonth();
 
   const validDates = new Set(getDateRange());
   state.availability = state.availability.filter((date) => validDates.has(date));
@@ -189,16 +215,18 @@ elements.form.addEventListener("submit", (event) => {
 });
 
 elements.form.addEventListener("input", syncDraftFromInputs);
+elements.form.addEventListener("change", syncDraftFromInputs);
 
-elements.availabilityGrid.addEventListener("change", (event) => {
-  const input = event.target.closest("input[type='checkbox']");
-  if (!input) return;
+elements.availabilityGrid.addEventListener("click", (event) => {
+  const card = event.target.closest(".day-card");
+  if (!card) return;
 
-  if (input.checked && !state.availability.includes(input.dataset.date)) {
-    state.availability.push(input.dataset.date);
+  const selected = state.availability.includes(card.dataset.date);
+  if (!selected) {
+    state.availability.push(card.dataset.date);
   }
-  if (!input.checked) {
-    state.availability = state.availability.filter((date) => date !== input.dataset.date);
+  if (selected) {
+    state.availability = state.availability.filter((date) => date !== card.dataset.date);
   }
 
   state.availability.sort();
@@ -213,4 +241,5 @@ elements.selectAllButton.addEventListener("click", () => {
   render();
 });
 
+populateMonthControls();
 render();

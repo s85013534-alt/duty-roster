@@ -31,7 +31,8 @@ body {
 }
 
 button,
-input {
+input,
+select {
   font: inherit;
 }
 
@@ -217,7 +218,8 @@ label {
   font-weight: 800;
 }
 
-input {
+input,
+select {
   width: 100%;
   min-height: 44px;
   border: 1px solid var(--line);
@@ -228,7 +230,8 @@ input {
   outline: none;
 }
 
-input:focus {
+input:focus,
+select:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
@@ -299,11 +302,14 @@ input:focus {
 .day-card {
   justify-content: space-between;
   gap: 10px;
+  width: 100%;
   min-height: 78px;
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 12px;
   background: #fff;
+  color: var(--ink);
+  text-align: left;
 }
 
 .day-card.available {
@@ -327,43 +333,23 @@ input:focus {
   font-weight: 700;
 }
 
-.toggle {
-  position: relative;
+.check-indicator {
+  display: grid;
+  place-items: center;
   flex: 0 0 auto;
-  width: 46px;
-  height: 28px;
-}
-
-.toggle input {
-  position: absolute;
-  opacity: 0;
-}
-
-.toggle span {
-  position: absolute;
-  inset: 0;
-  border-radius: 999px;
-  background: #d5ddd9;
-}
-
-.toggle span::after {
-  content: "";
-  position: absolute;
-  top: 4px;
-  left: 4px;
-  width: 20px;
-  height: 20px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
+  border: 2px solid var(--line);
+  color: #fff;
   background: #fff;
-  transition: transform 0.16s ease;
+  font-size: 1rem;
+  font-weight: 900;
 }
 
-.toggle input:checked + span {
+.day-card.available .check-indicator {
+  border-color: var(--accent);
   background: var(--accent);
-}
-
-.toggle input:checked + span::after {
-  transform: translateX(18px);
 }
 
 .status-strip {

@@ -3,6 +3,7 @@ const settingsKey = "duty-roster-admin-settings-v1";
 
 const elements = {
   settingsForm: document.querySelector("#settingsForm"),
+  rosterYear: document.querySelector("#rosterYear"),
   rosterMonth: document.querySelector("#rosterMonth"),
   slotsPerDay: document.querySelector("#slotsPerDay"),
   restDays: document.querySelector("#restDays"),
@@ -30,6 +31,29 @@ function todayIso() {
 
 function currentMonth() {
   return todayIso().slice(0, 7);
+}
+
+function getSelectedMonth() {
+  return `${elements.rosterYear.value}-${elements.rosterMonth.value}`;
+}
+
+function populateMonthControls() {
+  const currentYear = new Date().getFullYear();
+  elements.rosterYear.innerHTML = "";
+  for (let year = currentYear - 1; year <= currentYear + 2; year += 1) {
+    const option = document.createElement("option");
+    option.value = String(year);
+    option.textContent = String(year);
+    elements.rosterYear.appendChild(option);
+  }
+
+  elements.rosterMonth.innerHTML = "";
+  for (let month = 1; month <= 12; month += 1) {
+    const option = document.createElement("option");
+    option.value = String(month).padStart(2, "0");
+    option.textContent = `${month}月`;
+    elements.rosterMonth.appendChild(option);
+  }
 }
 
 function addDays(date, days) {
@@ -110,7 +134,9 @@ function render() {
 }
 
 function renderSettings() {
-  elements.rosterMonth.value = state.settings.rosterMonth;
+  const [year, month] = state.settings.rosterMonth.split("-");
+  elements.rosterYear.value = year;
+  elements.rosterMonth.value = month;
   elements.slotsPerDay.value = state.settings.slotsPerDay;
   elements.restDays.value = state.settings.restDays;
   elements.dateCountLabel.textContent = `${getDateRange().length} days`;
@@ -173,7 +199,7 @@ function renderRoster() {
 }
 
 function syncSettingsFromForm() {
-  state.settings.rosterMonth = elements.rosterMonth.value;
+  state.settings.rosterMonth = getSelectedMonth();
   state.settings.slotsPerDay = Math.max(1, Number(elements.slotsPerDay.value || 1));
   state.settings.restDays = Math.max(0, Number(elements.restDays.value || 0));
   state.roster = [];
@@ -301,8 +327,10 @@ function escapeHtml(value) {
 }
 
 elements.settingsForm.addEventListener("input", syncSettingsFromForm);
+elements.settingsForm.addEventListener("change", syncSettingsFromForm);
 elements.loadResponsesButton.addEventListener("click", loadResponses);
 elements.buildRosterButton.addEventListener("click", buildRoster);
 elements.exportCsvButton.addEventListener("click", exportCsv);
 
+populateMonthControls();
 render();
