@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>可執勤日期填表</title>
+    <link rel="stylesheet" href="assets/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Duty roster</p>
+            <h1>可執勤日期填表</h1>
+          </div>
+          <div class="topbar-actions">
+            <a class="ghost-link" href="admin.html">管理頁</a>
+          </div>
+        </header>
+
+        <section class="form-page">
+          <form class="panel online-form" id="availabilityForm">
+            <div class="panel-title">
+              <h2>填寫資料</h2>
+              <span id="dateCountLabel">0 天</span>
+            </div>
+            <div class="form-grid">
+              <label>
+                姓名
+                <input id="memberName" type="text" placeholder="例如：王小明" required />
+              </label>
+              <label>
+                聯絡方式
+                <input id="memberContact" type="text" placeholder="手機或 Line，可留空" />
+              </label>
+              <label>
+                執勤月份
+                <input id="rosterMonth" type="month" required />
+              </label>
+            </div>
+            <div class="panel-title availability-title">
+              <h2>勾選該月可執勤日期</h2>
+              <button class="ghost-button" id="selectAllButton" type="button">全選</button>
+            </div>
+            <div class="calendar-grid" id="availabilityGrid"></div>
+            <div class="submit-row">
+              <div class="status-strip" id="submitStatus">資料會送到管理者設定的 Google 試算表。</div>
+              <button class="primary-button" id="submitButton" type="submit">送出</button>
+            </div>
+          </form>
+        </section>
+      </section>
+    </main>
+
+    <script src="assets/config.js"></script>
+    <script src="assets/app.js"></script>
+  </body>
+</html>

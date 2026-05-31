@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>輪值表管理頁</title>
+    <link rel="stylesheet" href="assets/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Admin</p>
+            <h1>輪值表管理頁</h1>
+          </div>
+          <div class="topbar-actions">
+            <a class="ghost-link" href="index.html">填表頁</a>
+            <button class="primary-button" id="loadResponsesButton" type="button">載入回覆</button>
+          </div>
+        </header>
+
+        <section class="control-grid">
+          <form class="panel" id="settingsForm">
+            <div class="panel-title">
+              <h2>排班設定</h2>
+              <span id="responseCountLabel">0 筆回覆</span>
+            </div>
+            <div class="form-grid">
+              <label>
+                執勤月份
+                <input id="rosterMonth" type="month" required />
+              </label>
+              <label>
+                每日人數
+                <input id="slotsPerDay" type="number" min="1" max="8" value="1" required />
+              </label>
+              <label>
+                同人間隔
+                <input id="restDays" type="number" min="0" max="14" value="1" required />
+              </label>
+            </div>
+          </form>
+
+          <section class="panel">
+            <div class="panel-title">
+              <h2>操作</h2>
+              <span id="dateCountLabel">0 天</span>
+            </div>
+            <div class="member-entry">
+              <button class="primary-button" id="buildRosterButton" type="button">產生輪值表</button>
+              <button class="ghost-button" id="exportCsvButton" type="button">匯出 CSV</button>
+            </div>
+          </section>
+        </section>
+
+        <section class="split-view">
+          <section class="panel">
+            <div class="panel-title">
+              <h2>填表回覆</h2>
+              <span id="backendStatus">尚未載入</span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>姓名</th>
+                    <th>聯絡方式</th>
+                    <th>可執勤日期</th>
+                  </tr>
+                </thead>
+                <tbody id="responsesTable"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="panel roster-panel">
+            <div class="panel-title">
+              <h2>產出輪值表</h2>
+              <span id="rosterSummary">尚未產生</span>
+            </div>
+            <div class="status-strip" id="rosterStatus">載入回覆後即可產生輪值表。</div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>日期</th>
+                    <th>星期</th>
+                    <th>值班人員</th>
+                    <th>狀態</th>
+                  </tr>
+                </thead>
+                <tbody id="rosterTable"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+      </section>
+    </main>
+
+    <script src="assets/config.js"></script>
+    <script src="assets/admin.js"></script>
+  </body>
+</html>
