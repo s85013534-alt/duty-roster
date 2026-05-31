@@ -161,6 +161,12 @@ function syncDraftFromInputs() {
   render();
 }
 
+function syncTextDraft() {
+  state.name = elements.memberName.value;
+  state.contact = elements.memberContact.value;
+  saveDraft();
+}
+
 function setStatus(message, tone = "") {
   elements.submitStatus.className = `status-strip ${tone}`;
   elements.submitStatus.textContent = message;
@@ -210,11 +216,10 @@ elements.form.addEventListener("submit", (event) => {
   submitAvailability();
 });
 
-elements.form.addEventListener("input", (event) => {
-  if (event.target.closest(".date-checkbox")) return;
-  syncDraftFromInputs();
-});
-elements.form.addEventListener("change", syncDraftFromInputs);
+elements.memberName.addEventListener("input", syncTextDraft);
+elements.memberContact.addEventListener("input", syncTextDraft);
+elements.rosterYear.addEventListener("change", syncDraftFromInputs);
+elements.rosterMonth.addEventListener("change", syncDraftFromInputs);
 
 elements.availabilityGrid.addEventListener("change", (event) => {
   const input = event.target.closest(".date-checkbox");
