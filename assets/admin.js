@@ -19,6 +19,7 @@ const elements = {
   exportCsvButton: document.querySelector("#exportCsvButton"),
   exportExcelButton: document.querySelector("#exportExcelButton"),
   exportLinks: document.querySelector("#exportLinks"),
+  exportText: document.querySelector("#exportText"),
 };
 
 const state = {
@@ -292,12 +293,12 @@ function buildRoster() {
   renderRoster();
 }
 
-function exportCsv() {
+function exportCsv(event) {
   if (state.roster.length === 0) buildRoster();
 
   const rows = buildRosterMatrixRows();
   const csv = `\ufeff${rows.map((row) => row.map(csvCell).join(",")).join("\n")}`;
-  downloadFile(`roster_matrix_${state.settings.rosterMonth}.csv`, csv, "text/csv;charset=utf-8");
+  prepareDownload(event.currentTarget, `roster_matrix_${state.settings.rosterMonth}.csv`, csv, "text/csv;charset=utf-8", csv);
 }
 
 function buildRosterMatrixRows() {
@@ -325,7 +326,7 @@ function buildRosterMatrixRows() {
   ];
 }
 
-function exportExcel() {
+function exportExcel(event) {
   if (state.roster.length === 0) buildRoster();
 
   const rows = buildRosterMatrixRows();
@@ -360,7 +361,8 @@ function exportExcel() {
 </body>
 </html>`;
 
-  downloadFile(`roster_matrix_${state.settings.rosterMonth}.xls`, `\ufeff${html}`, "application/vnd.ms-excel;charset=utf-8");
+  const plainTable = rows.map((row) => row.join("\t")).join("\n");
+  prepareDownload(event.currentTarget, `roster_matrix_${state.settings.rosterMonth}.xls`, `\ufeff${html}`, "application/vnd.ms-excel;charset=utf-8", plainTable);
 }
 
 function formatTaiwanMonth(monthValue) {
@@ -373,28 +375,19 @@ function setBackendStatus(message, tone = "") {
   elements.backendStatus.textContent = message;
 }
 
-function downloadFile(filename, content, type) {
+function prepareDownload(anchor, filename, content, type, previewText = content) {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  link.style.display = "none";
-  document.body.appendChild(link);
-  link.click();
-
-  const manualLink = document.createElement("a");
-  manualLink.href = url;
-  manualLink.download = filename;
-  manualLink.className = "download-link";
-  manualLink.textContent = `下載 ${filename}`;
-  manualLink.addEventListener("click", () => {
-    window.setTimeout(() => URL.revokeObjectURL(url), 30000);
-  });
+  if (anchor.dataset.downloadUrl) {
+    URL.revokeObjectURL(anchor.dataset.downloadUrl);
+  }
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.dataset.downloadUrl = url;
 
   elements.exportLinks.innerHTML = "";
-  elements.exportLinks.appendChild(manualLink);
-  link.remove();
+  elements.exportText.value = previewText.replace(/^\ufeff/, "");
+  elements.exportText.style.display = "block";
 }
 
 function csvCell(value) {
