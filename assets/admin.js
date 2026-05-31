@@ -293,12 +293,12 @@ function buildRoster() {
   renderRoster();
 }
 
-function exportCsv(event) {
+function exportCsv() {
   if (state.roster.length === 0) buildRoster();
 
   const rows = buildRosterMatrixRows();
   const csv = `\ufeff${rows.map((row) => row.map(csvCell).join(",")).join("\n")}`;
-  prepareDownload(event.currentTarget, `roster_matrix_${state.settings.rosterMonth}.csv`, csv, "text/csv;charset=utf-8", csv);
+  downloadFile(`roster_matrix_${state.settings.rosterMonth}.csv`, csv, "text/csv;charset=utf-8", csv);
 }
 
 function buildRosterMatrixRows() {
@@ -324,9 +324,10 @@ function buildRosterMatrixRows() {
       ];
     }),
   ];
+  return rows;
 }
 
-function exportExcel(event) {
+function exportExcel() {
   if (state.roster.length === 0) buildRoster();
 
   const rows = buildRosterMatrixRows();
@@ -362,7 +363,7 @@ function exportExcel(event) {
 </html>`;
 
   const plainTable = rows.map((row) => row.join("\t")).join("\n");
-  prepareDownload(event.currentTarget, `roster_matrix_${state.settings.rosterMonth}.xls`, `\ufeff${html}`, "application/vnd.ms-excel;charset=utf-8", plainTable);
+  downloadFile(`roster_matrix_${state.settings.rosterMonth}.xls`, `\ufeff${html}`, "application/vnd.ms-excel;charset=utf-8", plainTable);
 }
 
 function formatTaiwanMonth(monthValue) {
@@ -375,19 +376,28 @@ function setBackendStatus(message, tone = "") {
   elements.backendStatus.textContent = message;
 }
 
-function prepareDownload(anchor, filename, content, type, previewText = content) {
+function downloadFile(filename, content, type, previewText = content) {
   const blob = new Blob([content], { type });
-  const url = URL.createObjectURL(blob);
-  if (anchor.dataset.downloadUrl) {
-    URL.revokeObjectURL(anchor.dataset.downloadUrl);
+  if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+    window.navigator.msSaveOrOpenBlob(blob, filename);
+    return;
   }
-  anchor.href = url;
-  anchor.download = filename;
-  anchor.dataset.downloadUrl = url;
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.rel = "noopener";
+  link.style.display = "none";
+  document.body.appendChild(link);
+  link.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window }));
 
   elements.exportLinks.innerHTML = "";
+  elements.exportLinks.textContent = `已建立下載：${filename}`;
   elements.exportText.value = previewText.replace(/^\ufeff/, "");
   elements.exportText.style.display = "block";
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
 
 function csvCell(value) {
