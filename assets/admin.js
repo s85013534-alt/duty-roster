@@ -1,4 +1,4 @@
-const weekdayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const weekdayLabels = ["日", "一", "二", "三", "四", "五", "六"];
 const settingsKey = "duty-roster-admin-settings-v1";
 
 const elements = {
@@ -17,6 +17,7 @@ const elements = {
   loadResponsesButton: document.querySelector("#loadResponsesButton"),
   buildRosterButton: document.querySelector("#buildRosterButton"),
   exportCsvButton: document.querySelector("#exportCsvButton"),
+  exportExcelButton: document.querySelector("#exportExcelButton"),
 };
 
 const state = {
@@ -24,6 +25,15 @@ const state = {
   responses: [],
   roster: [],
 };
+
+function getPersonInfo(name) {
+  const normalizedName = normalizeName(name);
+  return (window.PEOPLE_DIRECTORY || []).find((person) => normalizeName(person.name) === normalizedName) || null;
+}
+
+function normalizeName(value) {
+  return String(value || "").replace(/\s+/g, "").trim();
+}
 
 function todayIso() {
   return toIsoDate(new Date());
@@ -284,6 +294,12 @@ function buildRoster() {
 function exportCsv() {
   if (state.roster.length === 0) buildRoster();
 
+  const rows = buildRosterMatrixRows();
+  const csv = `\ufeff${rows.map((row) => row.map(csvCell).join(",")).join("\n")}`;
+  downloadFile(`roster_matrix_${state.settings.rosterMonth}.csv`, csv, "text/csv;charset=utf-8");
+}
+
+function buildRosterMatrixRows() {
   const dates = getDateRange();
   const assignedByName = new Map(state.responses.map((response) => [response.name, new Set()]));
   state.roster.forEach((row) => {
@@ -296,16 +312,59 @@ function exportCsv() {
   const rows = [
     ["職別", "單位", "姓名", ...dates.map((date) => String(parseIsoDate(date).getDate()))],
     ["", "", "星期", ...dates.map(getWeekday)],
-    ...state.responses.map((response) => [
-      "",
-      "",
-      response.name,
-      ...dates.map((date) => (assignedByName.get(response.name)?.has(date) ? "●" : "")),
-    ]),
+    ...state.responses.map((response) => {
+      const person = getPersonInfo(response.name);
+      return [
+        person?.role || "",
+        person?.unit || "",
+        response.name,
+        ...dates.map((date) => (assignedByName.get(response.name)?.has(date) ? "●" : "")),
+      ];
+    }),
   ];
+}
 
-  const csv = `\ufeff${rows.map((row) => row.map(csvCell).join(",")).join("\n")}`;
-  downloadFile(`roster_matrix_${state.settings.rosterMonth}.csv`, csv, "text/csv;charset=utf-8");
+function exportExcel() {
+  if (state.roster.length === 0) buildRoster();
+
+  const rows = buildRosterMatrixRows();
+  const dates = getDateRange();
+  const title = `臺北市搜救隊醫療組勤務輪值表(${formatTaiwanMonth(state.settings.rosterMonth)})`;
+  const columnCount = rows[0]?.length || 3;
+  const colgroup = [
+    '<col style="width:7.5em">',
+    '<col style="width:10em">',
+    '<col style="width:8em">',
+    ...dates.map(() => '<col style="width:2.82em">'),
+  ].join("");
+
+  const tableRows = [
+    `<tr><th colspan="${columnCount}" class="title">${escapeHtml(title)}</th></tr>`,
+    ...rows.map((row) => `<tr>${row.map((cell, index) => `<td class="${index >= 3 ? "date-cell" : ""}">${escapeHtml(cell)}</td>`).join("")}</tr>`),
+  ].join("");
+
+  const html = `<!doctype html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    table { border-collapse: collapse; font-family: "DFKai-SB", "BiauKai", serif; }
+    th, td { border: 1px solid #000; text-align: center; vertical-align: middle; mso-number-format:"\\@"; }
+    .title { font-family: "DFKai-SB", "BiauKai", serif; font-size: 16pt; font-weight: 700; border: 0; }
+    .date-cell { width: 2.82em; }
+  </style>
+</head>
+<body>
+  <table>${colgroup}${tableRows}</table>
+</body>
+</html>`;
+
+  downloadFile(`roster_matrix_${state.settings.rosterMonth}.xls`, `\ufeff${html}`, "application/vnd.ms-excel;charset=utf-8");
+}
+
+function formatTaiwanMonth(monthValue) {
+  const [year, month] = monthValue.split("-").map(Number);
+  return `${year - 1911}年${month}月份`;
 }
 
 function setBackendStatus(message, tone = "") {
@@ -342,6 +401,7 @@ elements.settingsForm.addEventListener("change", syncSettingsFromForm);
 elements.loadResponsesButton.addEventListener("click", loadResponses);
 elements.buildRosterButton.addEventListener("click", buildRoster);
 elements.exportCsvButton.addEventListener("click", exportCsv);
+elements.exportExcelButton.addEventListener("click", exportExcel);
 
 populateMonthControls();
 render();

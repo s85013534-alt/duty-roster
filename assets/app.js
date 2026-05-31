@@ -1,4 +1,4 @@
-const weekdayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const weekdayLabels = ["日", "一", "二", "三", "四", "五", "六"];
 const draftKey = "duty-roster-form-draft-v1";
 
 const elements = {
