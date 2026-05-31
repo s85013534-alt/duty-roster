@@ -137,17 +137,14 @@ function render() {
 
   dates.forEach((date) => {
     const available = state.availability.includes(date);
-    const card = document.createElement("button");
-    card.type = "button";
+    const card = document.createElement("label");
     card.className = `day-card${available ? " available" : ""}`;
-    card.dataset.date = date;
-    card.setAttribute("aria-pressed", String(available));
     card.innerHTML = `
       <span class="day-text">
         <strong>${formatDate(date)}</strong>
         <span>${getWeekday(date)}</span>
       </span>
-      <span class="check-indicator" aria-hidden="true">${available ? "✓" : ""}</span>
+      <input class="date-checkbox" type="checkbox" data-date="${date}" ${available ? "checked" : ""} />
     `;
     elements.availabilityGrid.appendChild(card);
   });
@@ -157,7 +154,6 @@ function syncDraftFromInputs() {
   state.name = elements.memberName.value;
   state.contact = elements.memberContact.value;
   state.rosterMonth = getSelectedMonth();
-
   const validDates = new Set(getDateRange());
   state.availability = state.availability.filter((date) => validDates.has(date));
   saveDraft();
@@ -179,7 +175,6 @@ async function submitAvailability() {
     setStatus("Please select at least one available date.", "warning");
     return;
   }
-
   elements.submitButton.disabled = true;
   setStatus("Submitting...");
 
@@ -217,16 +212,15 @@ elements.form.addEventListener("submit", (event) => {
 elements.form.addEventListener("input", syncDraftFromInputs);
 elements.form.addEventListener("change", syncDraftFromInputs);
 
-elements.availabilityGrid.addEventListener("click", (event) => {
-  const card = event.target.closest(".day-card");
-  if (!card) return;
+elements.availabilityGrid.addEventListener("change", (event) => {
+  const input = event.target.closest(".date-checkbox");
+  if (!input) return;
 
-  const selected = state.availability.includes(card.dataset.date);
-  if (!selected) {
-    state.availability.push(card.dataset.date);
+  if (input.checked && !state.availability.includes(input.dataset.date)) {
+    state.availability.push(input.dataset.date);
   }
-  if (selected) {
-    state.availability = state.availability.filter((date) => date !== card.dataset.date);
+  if (!input.checked) {
+    state.availability = state.availability.filter((date) => date !== input.dataset.date);
   }
 
   state.availability.sort();

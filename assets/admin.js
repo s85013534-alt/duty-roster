@@ -326,6 +326,7 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
+
 elements.settingsForm.addEventListener("input", syncSettingsFromForm);
 elements.settingsForm.addEventListener("change", syncSettingsFromForm);
 elements.loadResponsesButton.addEventListener("click", loadResponses);

@@ -210,6 +210,13 @@ button:hover {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.date-checkbox {
+  width: 20px;
+  min-height: 20px;
+  accent-color: var(--accent);
+  flex: 0 0 auto;
+}
+
 label {
   display: grid;
   gap: 7px;
@@ -331,25 +338,6 @@ select:focus {
   color: var(--muted);
   font-size: 0.82rem;
   font-weight: 700;
-}
-
-.check-indicator {
-  display: grid;
-  place-items: center;
-  flex: 0 0 auto;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  border: 2px solid var(--line);
-  color: #fff;
-  background: #fff;
-  font-size: 1rem;
-  font-weight: 900;
-}
-
-.day-card.available .check-indicator {
-  border-color: var(--accent);
-  background: var(--accent);
 }
 
 .status-strip {
