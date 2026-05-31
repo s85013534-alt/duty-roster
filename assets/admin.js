@@ -294,8 +294,8 @@ function exportCsv() {
   });
 
   const rows = [
-    ["", "", "Date", ...dates.map((date) => String(parseIsoDate(date).getDate()))],
-    ["Role", "Unit", "Name", ...dates.map(getWeekday)],
+    ["職別", "單位", "姓名", ...dates.map((date) => String(parseIsoDate(date).getDate()))],
+    ["", "", "星期", ...dates.map(getWeekday)],
     ...state.responses.map((response) => [
       "",
       "",
@@ -304,8 +304,8 @@ function exportCsv() {
     ]),
   ];
 
-  const csv = rows.map((row) => row.map(csvCell).join(",")).join("\n");
-  downloadFile(`roster_${state.settings.rosterMonth}.csv`, csv, "text/csv;charset=utf-8");
+  const csv = `\ufeff${rows.map((row) => row.map(csvCell).join(",")).join("\n")}`;
+  downloadFile(`roster_matrix_${state.settings.rosterMonth}.csv`, csv, "text/csv;charset=utf-8");
 }
 
 function setBackendStatus(message, tone = "") {
