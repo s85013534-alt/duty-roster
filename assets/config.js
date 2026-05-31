@@ -1,5 +1,3 @@
 window.ROSTER_CONFIG = {
-  // Paste your deployed Google Apps Script Web app URL here.
-  // Example: https://script.google.com/macros/s/AKfycbx.../exec
-  apiUrl: "",
+  apiUrl: "https://script.google.com/macros/s/AKfycbyzr1-l3S1I5ORJVH1H1wb2SGPI8z3grmN9jx3t2B8Km3NMsV1Y7pbRt-1P1Ec5O9b8aw/exec",
 };
